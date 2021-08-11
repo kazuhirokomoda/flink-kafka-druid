@@ -1,3 +1,12 @@
 .idea/
 target/
 project/target/
+
+# VS code
+.vscode
+
+# Metals
+.metals/
+.bloop/
+project/metals.sbt
+metals.sbt

@@ -18,7 +18,9 @@ package org.example
  * limitations under the License.
  */
 
-import org.apache.flink.api.scala._
+import org.apache.flink.streaming.api.scala._
+import org.example.models.ExampleData
+import org.example.sinks.KafkaWordCountSink
 
 /**
  * Implements the "WordCount" program that computes a simple word occurrence histogram
@@ -31,24 +33,40 @@ import org.apache.flink.api.scala._
  *   - write and use user-defined functions.
  */
 object WordCount {
+  val WORDS = Array[String](
+    "To be, or not to be,--that is the question:--",
+    "Whether 'tis nobler in the mind to suffer",
+    "The slings and arrows of outrageous fortune",
+    "Or to take arms against a sea of troubles,"
+  )
+
   def main(args: Array[String]) {
 
-    // set up the execution environment
-    val env = ExecutionEnvironment.getExecutionEnvironment
+    // set up the stream execution environment
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
 
     // get input data
-    val text = env.fromElements("To be, or not to be,--that is the question:--",
-      "Whether 'tis nobler in the mind to suffer", "The slings and arrows of outrageous fortune",
-      "Or to take arms against a sea of troubles,")
+    val text: DataStream[String] = env.fromElements(WORDS: _*)
 
-    val counts = text.flatMap { _.toLowerCase.split("\\W+") }
-      .map { (_, 1) }
-      .groupBy(0)
+    val counts: DataStream[(String, Int)] = text
+      // split up the lines in pairs (2-tuples) containing: (word, 1)
+      .flatMap(_.toLowerCase.split("\\W+"))
+      .filter(_.nonEmpty)
+      .map((_, 1))
+      // group by the tuple field "0" and sum up tuple field "1"
+      .keyBy(_._1)
       .sum(1)
 
-    // execute and print result
-    counts.print()
+    val stream: DataStream[ExampleData] = counts.map { x =>
+      ExampleData(x._1, x._2, x._1.charAt(0), System.currentTimeMillis)
+    }
 
+    // send to Kafka
+    KafkaWordCountSink.sendToKafka(stream)
+      .uid("kafka-wordcount-sink-id")
+      .name("kafka-wordcount-sink-name")
+
+    env.execute("Scala (Stream) WordCount Example")
   }
 }
 

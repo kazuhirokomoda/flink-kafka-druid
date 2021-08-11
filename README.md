@@ -7,6 +7,17 @@ A Flink application project using Scala and SBT.
 
 ```
  The program finished with the following exception:
+
+com.fasterxml.jackson.databind.MappingJsonFactory@4c59e45e is not serializable. The object probably contains or references non serializable fields.
+	org.apache.flink.api.java.ClosureCleaner.clean(ClosureCleaner.java:151)
+	org.apache.flink.api.java.ClosureCleaner.clean(ClosureCleaner.java:126)
+	org.apache.flink.api.java.ClosureCleaner.clean(ClosureCleaner.java:126)
+	org.apache.flink.api.java.ClosureCleaner.clean(ClosureCleaner.java:71)
+	org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer.<init>(FlinkKafkaProducer.java:648)
+	org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer.<init>(FlinkKafkaProducer.java:602)
+	org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer.<init>(FlinkKafkaProducer.java:578)
+	org.example.sinks.KafkaWordCountSink$.sendToKafka(KafkaWordCountSink.scala:17)
+	org.example.WordCount$.main(WordCount.scala:65)
 ```
 
 # Setup
